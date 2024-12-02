@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Love Chat</title>
+    <title>My Bear</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -58,8 +58,9 @@
         }
 
         .message-bubble.sent {
-            background-color: rgba(255, 200, 200, 0.8);
-            color: #b30047;
+            /* Giữ cùng kiểu hiển thị như received */
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #333;
         }
 
         .input-box {
@@ -144,22 +145,35 @@
             chatContainer.innerHTML = '';
 
             messages.forEach(message => {
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('chat-message', 'received');
-                messageElement.innerHTML = `
-                    <img src="${message.avatar}" alt="Avatar">
-                    <div class="message-bubble received">
-                        <strong>${message.name}:</strong> ${message.tinnhan}
-                    </div>
-                `;
-                chatContainer.appendChild(messageElement);
+                addMessageToUI(message, false);
             });
 
             // Tự động cuộn xuống cuối
+            scrollToBottom();
+        }
+
+        // Thêm tin nhắn vào giao diện
+        function addMessageToUI(message, isSent) {
+            const chatContainer = document.getElementById('chat-messages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message', isSent ? 'sent' : 'received');
+            messageElement.innerHTML = `
+                <img src="${message.avatar}" alt="Avatar">
+                <div class="message-bubble ${isSent ? 'sent' : 'received'}">
+                    <strong>${message.name}:</strong> ${message.tinnhan}
+                </div>
+            `;
+            chatContainer.appendChild(messageElement);
+            scrollToBottom();
+        }
+
+        // Cuộn xuống cuối khung chat
+        function scrollToBottom() {
+            const chatContainer = document.getElementById('chat-messages');
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Gửi tin nhắn lên API
+        // Gửi tin nhắn
         async function sendMessage() {
             const inputElement = document.getElementById('message-input');
             const message = inputElement.value;
@@ -178,6 +192,10 @@
                 avatar: avatar
             };
 
+            // Hiển thị tin nhắn ngay lập tức trên giao diện
+            addMessageToUI(newMessage, true);
+
+            // Gửi tin nhắn lên API
             await fetch(apiURL, {
                 method: 'POST',
                 headers: {
@@ -187,7 +205,6 @@
             });
 
             inputElement.value = '';
-            loadMessages(); // Tải lại tin nhắn
         }
 
         // Gán phím Enter để gửi tin nhắn
