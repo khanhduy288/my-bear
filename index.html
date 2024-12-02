@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Love Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        .chat-box {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        #chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .chat-message img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            word-wrap: break-word;
+        }
+
+        .message-bubble.received {
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #006633;
+        }
+
+        .message-bubble.sent {
+            background-color: rgba(255, 200, 200, 0.8);
+            color: #b30047;
+        }
+
+        .input-box {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #fff;
+            border-top: 1px solid #ccc;
+        }
+
+        .input-box input {
+            flex-grow: 1;
+            border-radius: 20px;
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .send-button {
+            background-color: #ff7f7f;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .send-button:hover {
+            background-color: #ff5050;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-message img {
+                width: 25px;
+                height: 25px;
+            }
+
+            .message-bubble {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .input-box input {
+                font-size: 12px;
+                padding: 6px;
+            }
+
+            .send-button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-box">
+        <h3 class="text-center text-danger py-2">💕 My Bear 💕</h3>
+
+        <!-- Messages -->
+        <div id="chat-messages">
+            <!-- Tin nhắn sẽ được thêm vào đây -->
+        </div>
+
+        <!-- Input -->
+        <div class="input-box">
+            <input id="message-input" type="text" placeholder="Type your message...">
+            <button class="send-button" id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const apiURL = "https://65682fed9927836bd9743814.mockapi.io/api/singup/webchat";
+
+        // Tải tin nhắn từ API
+        async function loadMessages() {
+            const response = await fetch(apiURL);
+            const messages = await response.json();
+            const chatContainer = document.getElementById('chat-messages');
+            chatContainer.innerHTML = '';
+
+            messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('chat-message', 'received');
+                messageElement.innerHTML = `
+                    <img src="${message.avatar}" alt="Avatar">
+                    <div class="message-bubble received">
+                        <strong>${message.name}:</strong> ${message.tinnhan}
+                    </div>
+                `;
+                chatContainer.appendChild(messageElement);
+            });
+
+            // Tự động cuộn xuống cuối
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Gửi tin nhắn lên API
+        async function sendMessage() {
+            const inputElement = document.getElementById('message-input');
+            const message = inputElement.value;
+
+            const name = localStorage.getItem('userName') || "Anonymous";
+            const avatar = localStorage.getItem('userAvatar') || "https://via.placeholder.com/30";
+
+            if (!message) {
+                alert('Please enter a message before sending.');
+                return;
+            }
+
+            const newMessage = {
+                tinnhan: message,
+                name: name,
+                avatar: avatar
+            };
+
+            await fetch(apiURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newMessage)
+            });
+
+            inputElement.value = '';
+            loadMessages(); // Tải lại tin nhắn
+        }
+
+        // Gán phím Enter để gửi tin nhắn
+        document.getElementById('message-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Sự kiện khi nhấn nút gửi
+        document.getElementById('send-button').addEventListener('click', sendMessage);
+
+        // Khởi động
+        loadMessages();
+    </script>
+</body>
+</html>
