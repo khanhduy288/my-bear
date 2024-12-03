@@ -122,7 +122,10 @@
             border-radius: 5px;
             display: none;
         }
-
+        a {
+            text-decoration: none;
+            color: inherit; /* Giữ nguyên màu chữ nếu cần */
+          }
         /* Responsive */
         @media (max-width: 600px) {
             #send-button {
@@ -147,6 +150,7 @@
             <div id="message-wrapper">
                 <input type="text" id="message-input" placeholder="Type your message...">
                 <button id="send-button">📩</button>
+                <a href="https://khanhduy298.github.io/Heart/">💕</a>
             </div>
         </div>
     </div>
