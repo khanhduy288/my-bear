@@ -22,14 +22,29 @@
             display: flex;
             flex-direction: column;
             flex-grow: 1;
-            max-height: 100%;
+            max-height: calc(100vh - 150px); /* Trừ header và footer */
             overflow-y: auto;
             padding: 20px;
-            padding-bottom: 80px; /* Giữ khoảng trống cho ô nhập và nút Send */
         }
 
         #chat-messages {
             margin-bottom: 20px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        #chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 4px;
+        }
+
+        #chat-messages::-webkit-scrollbar-track {
+            background-color: transparent;
         }
 
         .chat-message {
@@ -72,7 +87,6 @@
             justify-content: center;
             border-top: 1px solid #ccc;
         }
-        
 
         #message-input {
             flex-grow: 1;
@@ -82,6 +96,7 @@
             font-size: 16px;
             padding: 10px;
         }
+
         #message-input::placeholder {
             color: #bbb;
         }
@@ -94,6 +109,7 @@
             margin-right: 10px;
             cursor: pointer;
         }
+
         #send-button:active {
             transform: scale(0.9);
         }
@@ -122,16 +138,17 @@
             border-radius: 5px;
             display: none;
         }
+
         a {
             text-decoration: none;
             color: inherit; /* Giữ nguyên màu chữ nếu cần */
-          }
+        }
+
         /* Responsive */
         @media (max-width: 600px) {
             #send-button {
                 font-size: 20px;
             }
-        
 
             #message-input {
                 font-size: 14px;
@@ -175,7 +192,6 @@
     <script>
         const apiURL = "https://65682fed9927836bd9743814.mockapi.io/api/singup/webchat";
 
-        // Kiểm tra localStorage
         const name = localStorage.getItem('userName');
         const avatar = localStorage.getItem('userAvatar');
 
@@ -207,9 +223,11 @@
             const response = await fetch(apiURL);
             const messages = await response.json();
             const chatContainer = document.getElementById('chat-messages');
+
             chatContainer.innerHTML = '';
 
-            messages.forEach(message => {
+            const recentMessages = messages.slice(-10); // Chỉ lấy 10 tin nhắn cuối
+            recentMessages.forEach(message => {
                 addMessageToUI(message, false);
             });
 
@@ -271,13 +289,12 @@
             inputElement.value = '';
         }
 
-        document.getElementById('message-input').addEventListener('keypress', function (e) {
+        document.getElementById('send-button').addEventListener('click', sendMessage);
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
-
-        document.getElementById('send-button').addEventListener('click', sendMessage);
 
         loadMessages();
         setInterval(loadMessages, 1000);

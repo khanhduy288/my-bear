@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pigeon Mail Effect</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #message-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #message-input {
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 25px;
+            width: 300px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        #send-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #007bff;
+        }
+
+        #send-button:active {
+            transform: scale(0.9);
+        }
+
+        #pigeon {
+            position: fixed;
+            bottom: 50px;
+            left: 50px;
+            width: 50px;
+            height: auto;
+            visibility: hidden;
+        }
+
+        @keyframes fly {
+            0% {
+                transform: translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(300px, -400px) scale(0.5);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Pigeon Mail Effect</h1>
+    <div id="message-container">
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button id="send-button">📩</button>
+    </div>
+    <img id="pigeon" src="https://upload.wikimedia.org/wikipedia/commons/6/63/Dove_cartoon_flying.png" alt="Pigeon">
+
+    <script>
+        const sendButton = document.getElementById('send-button');
+        const pigeon = document.getElementById('pigeon');
+        const messageInput = document.getElementById('message-input');
+
+        function sendMessage() {
+            const message = messageInput.value;
+
+            if (!message) {
+                alert("Please enter a message before sending.");
+                return;
+            }
+
+            // Hiển thị hiệu ứng chim bồ câu
+            pigeon.style.visibility = 'visible';
+            pigeon.style.animation = 'fly 1.5s ease-out forwards';
+
+            // Ẩn chim bồ câu sau khi hoàn thành hiệu ứng
+            pigeon.addEventListener('animationend', () => {
+                pigeon.style.visibility = 'hidden';
+                pigeon.style.animation = 'none'; // Reset animation để có thể lặp lại
+            });
+
+            // Xóa nội dung ô nhập sau khi gửi
+            messageInput.value = '';
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
