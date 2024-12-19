@@ -33,7 +33,11 @@
             scrollbar-width: thin;
             scrollbar-color: #ccc transparent;
         }
-
+        
+        .like-button.no-likes {
+        color: black !important;
+        }
+        
         #chat-messages::-webkit-scrollbar {
             width: 8px;
         }
@@ -194,19 +198,34 @@
         const avatar = localStorage.getItem('userAvatar') || "https://via.placeholder.com/30";
 
         async function loadMessages() {
-            const response = await fetch(apiURL);
-            const messages = await response.json();
-            const chatContainer = document.getElementById('chat-messages');
+    // Lưu lại vị trí cuộn hiện tại
+    const chatContainer = document.getElementById('chat-messages');
+    
+    // Kiểm tra xem chatContainer có tồn tại hay không
+    if (!chatContainer) return;
 
-            chatContainer.innerHTML = '';
+    // Lưu vị trí cuộn trước khi tải lại tin nhắn
+    const currentScrollPosition = chatContainer.scrollTop;
 
-            const recentMessages = messages.slice(-10);
-            recentMessages.forEach(message => {
-                addMessageToUI(message, false);
-            });
+    // Loại bỏ focus khỏi bất kỳ phần tử nào hiện tại
+    if (document.activeElement) {
+        document.activeElement.blur();
+    }
 
-            scrollToBottom();
-        }
+    const response = await fetch(apiURL);
+    const messages = await response.json();
+
+    // Xóa tất cả tin nhắn hiện tại trong chat
+    chatContainer.innerHTML = '';
+
+    const recentMessages = messages.slice(-10);
+    recentMessages.forEach(message => {
+        addMessageToUI(message, false);
+    });
+
+    // Cuộn lại vị trí cũ sau khi tải tin nhắn mới
+    chatContainer.scrollTop = currentScrollPosition;
+}
 
         function addMessageToUI(message, isSent) {
             const chatContainer = document.getElementById('chat-messages');
@@ -259,7 +278,6 @@
 
             scrollToBottom();
         }
-
         function showCopyStatus() {
             const copyStatus = document.getElementById('copy-status');
             copyStatus.style.display = 'block';
