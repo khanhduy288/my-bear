@@ -49,6 +49,7 @@
 
         .chat-message {
             display: flex;
+            align-items: center;
             margin-bottom: 10px;
         }
 
@@ -82,6 +83,14 @@
             color: gray;
             text-align: right;
             margin-top: 5px;
+        }
+
+        .copy-button {
+            margin-left: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
         }
 
         #send-container {
@@ -147,6 +156,20 @@
             display: none;
         }
 
+        #copy-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
+            font-size: 14px;
+        }
+
         a {
             text-decoration: none;
             color: inherit;
@@ -193,6 +216,7 @@
     </div>
 
     <div id="info-alert">Please enter your name and avatar!</div>
+    <div id="copy-status">Tin nhắn đã được copy!</div>
 
     <script>
         const apiURL = "https://65682fed9927836bd9743814.mockapi.io/api/singup/webchat";
@@ -249,9 +273,27 @@
                     <strong>${message.name}:</strong> ${message.tinnhan}
                     <div class="message-time">${message.timestamp || ''}</div>
                 </div>
+                <button class="btn btn-sm btn-light copy-button" title="Copy Message">📋</button>
             `;
             chatContainer.appendChild(messageElement);
+
+            // Gắn sự kiện sao chép
+            const copyButton = messageElement.querySelector('.copy-button');
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(message.tinnhan).then(() => {
+                    showCopyStatus();
+                });
+            });
+
             scrollToBottom();
+        }
+
+        function showCopyStatus() {
+            const copyStatus = document.getElementById('copy-status');
+            copyStatus.style.display = 'block';
+            setTimeout(() => {
+                copyStatus.style.display = 'none';
+            }, 5000);
         }
 
         function scrollToBottom() {
