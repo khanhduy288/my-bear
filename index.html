@@ -33,11 +33,7 @@
             scrollbar-width: thin;
             scrollbar-color: #ccc transparent;
         }
-        
-        .like-button.no-likes {
-        color: black !important;
-        }
-        
+
         #chat-messages::-webkit-scrollbar {
             width: 8px;
         }
@@ -93,25 +89,12 @@
             display: flex;
             gap: 5px;
             margin-top: 5px;
-            align-items: center;
-        }
-
-        .like-button-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .like-count {
-            position: absolute;
-            font-size: 10px;
-            color: white;
-            background-color: red;
-            border-radius: 50%;
-            padding: 2px 5px;
-            top: -5px;
-            right: -5px;
+            font-size: 12px;
+            color: gray;
+            margin-left: 1px;
         }
 
         #send-container {
@@ -166,6 +149,14 @@
             font-size: 14px;
         }
 
+        .like-button.heart-liked {
+            color: red;
+        }
+
+        .like-button.heart-unliked {
+            color: black;
+        }
+
         @media (max-width: 600px) {
             #send-button {
                 font-size: 20px;
@@ -193,40 +184,68 @@
 
     <script>
         const apiURL = "https://65682fed9927836bd9743814.mockapi.io/api/singup/webchat";
+        let lastMessageTimestamp = null;  // Biến lưu trữ thời gian của tin nhắn cuối cùng
+        let lastMessages = [];  // Biến lưu trữ danh sách tin nhắn cũ
 
+        // Lấy thông tin người dùng từ localStorage
         const name = localStorage.getItem('userName') || "Anonymous";
         const avatar = localStorage.getItem('userAvatar') || "https://via.placeholder.com/30";
 
+        // Hàm để so sánh tin nhắn cũ và mới
+        function hasMessageChanged(messages) {
+            if (messages.length !== lastMessages.length) return true; // Nếu số lượng tin nhắn khác nhau
+            for (let i = 0; i < messages.length; i++) {
+                if (messages[i].likes !== lastMessages[i].likes || messages[i].tinnhan !== lastMessages[i].tinnhan) {
+                    return true; // Nếu có sự thay đổi trong likes hoặc nội dung tin nhắn
+                }
+            }
+            return false; // Không có thay đổi
+        }
+
+        // Hàm load tin nhắn từ server
         async function loadMessages() {
-    // Lưu lại vị trí cuộn hiện tại
-    const chatContainer = document.getElementById('chat-messages');
-    
-    // Kiểm tra xem chatContainer có tồn tại hay không
-    if (!chatContainer) return;
+            const chatContainer = document.getElementById('chat-messages');
+            const messageInput = document.getElementById('message-input');
 
-    // Lưu vị trí cuộn trước khi tải lại tin nhắn
-    const currentScrollPosition = chatContainer.scrollTop;
+            if (!chatContainer || !messageInput) return;
 
-    // Loại bỏ focus khỏi bất kỳ phần tử nào hiện tại
-    if (document.activeElement) {
-        document.activeElement.blur();
-    }
+            const currentScrollPosition = chatContainer.scrollTop;
+            const currentInputValue = messageInput.value;
 
-    const response = await fetch(apiURL);
-    const messages = await response.json();
+            const response = await fetch(apiURL);
+            const messages = await response.json();
 
-    // Xóa tất cả tin nhắn hiện tại trong chat
-    chatContainer.innerHTML = '';
+            // Kiểm tra xem có tin nhắn mới hoặc có sự thay đổi trong tin nhắn không
+            const latestMessageTimestamp = messages.length > 0 ? messages[messages.length - 1].timestamp : null;
 
-    const recentMessages = messages.slice(-10);
-    recentMessages.forEach(message => {
-        addMessageToUI(message, false);
-    });
+            // Nếu không có tin nhắn mới hoặc không có thay đổi, không cần load lại
+            if (latestMessageTimestamp === lastMessageTimestamp && !hasMessageChanged(messages)) {
+                return;
+            }
 
-    // Cuộn lại vị trí cũ sau khi tải tin nhắn mới
-    chatContainer.scrollTop = currentScrollPosition;
-}
+            // Cập nhật lại thời gian của tin nhắn cuối cùng
+            lastMessageTimestamp = latestMessageTimestamp;
 
+            // Cập nhật lại danh sách tin nhắn cũ
+            lastMessages = [...messages];
+
+            // Xóa tất cả tin nhắn hiện tại trong chat
+            chatContainer.innerHTML = '';
+
+            // Hiển thị các tin nhắn mới
+            const recentMessages = messages.slice(-10);
+            recentMessages.forEach(message => {
+                addMessageToUI(message, false);
+            });
+
+            // Cuộn lại vị trí cũ sau khi tải tin nhắn mới
+            chatContainer.scrollTop = currentScrollPosition;
+
+            // Đảm bảo rằng input giữ nguyên giá trị trước đó
+            messageInput.value = currentInputValue;
+        }
+
+        // Hàm để thêm tin nhắn vào giao diện người dùng
         function addMessageToUI(message, isSent) {
             const chatContainer = document.getElementById('chat-messages');
             const messageElement = document.createElement('div');
@@ -238,10 +257,8 @@
                     <div class="message-time">${message.timestamp || ''}</div>
                     <div class="action-buttons">
                         <button class="btn btn-sm btn-light copy-button" title="Copy Message">📋</button>
-                        <div class="like-button-container">
-                            <button class="btn btn-sm btn-light like-button" title="Like Message">❤️</button>
-                            <span class="like-count">${message.likes || 0}</span>
-                        </div>
+                        <button class="btn btn-sm btn-light like-button ${message.likes > 0 ? 'heart-liked' : 'heart-unliked'}" title="Like Message">❤️</button>
+                        <span class="like-count">${message.likes || 0}</span>
                         <button class="btn btn-sm btn-light edit-button" title="Edit Message">✏️</button>
                     </div>
                 </div>
@@ -260,8 +277,10 @@
             const likeButton = messageElement.querySelector('.like-button');
             likeButton.addEventListener('click', async () => {
                 message.likes = (message.likes || 0) + 1;
+                likeButton.classList.remove('heart-unliked');
+                likeButton.classList.add('heart-liked');
                 await updateMessage(message);
-                loadMessages();
+                loadMessages();  // Gọi lại loadMessages sau khi like
             });
 
             // Gắn sự kiện chỉnh sửa
@@ -272,20 +291,14 @@
                 if (newText && newText !== message.tinnhan) {
                     message.tinnhan = newText;
                     updateMessage(message);
-                    loadMessages();
+                    loadMessages();  // Gọi lại loadMessages sau khi chỉnh sửa
                 }
             });
 
             scrollToBottom();
         }
-        function showCopyStatus() {
-            const copyStatus = document.getElementById('copy-status');
-            copyStatus.style.display = 'block';
-            setTimeout(() => {
-                copyStatus.style.display = 'none';
-            }, 5000);
-        }
 
+        // Hàm để cập nhật tin nhắn trên server
         async function updateMessage(message) {
             await fetch(`${apiURL}/${message.id}`, {
                 method: 'PUT',
@@ -296,11 +309,13 @@
             });
         }
 
+        // Hàm để cuộn xuống cuối trang
         function scrollToBottom() {
             const chatContainer = document.getElementById('chat-messages');
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
+        // Hàm gửi tin nhắn mới
         async function sendMessage() {
             const inputElement = document.getElementById('message-input');
             const message = inputElement.value;
@@ -332,6 +347,7 @@
             inputElement.value = '';
         }
 
+        // Sự kiện gửi tin nhắn khi nhấn nút hoặc nhấn Enter
         document.getElementById('send-button').addEventListener('click', sendMessage);
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -339,8 +355,8 @@
             }
         });
 
+        // Tải tin nhắn lần đầu và cứ mỗi 1 giây kiểm tra nếu có tin nhắn mới
         loadMessages();
         setInterval(loadMessages, 1000);
     </script>
 </body>
-</html>
