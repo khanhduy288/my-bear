@@ -85,12 +85,29 @@
             margin-top: 5px;
         }
 
-        .copy-button {
-            margin-left: 10px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+            align-items: center;
+        }
+
+        .like-button-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .like-count {
+            position: absolute;
+            font-size: 10px;
+            color: white;
+            background-color: red;
+            border-radius: 50%;
+            padding: 2px 5px;
+            top: -5px;
+            right: -5px;
         }
 
         #send-container {
@@ -131,31 +148,6 @@
             transform: scale(0.9);
         }
 
-        /* Form điền thông tin */
-        #user-info-form {
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            display: none;
-        }
-
-        #info-alert {
-            position: fixed;
-            bottom: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #ffcccc;
-            color: #900;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-        }
-
         #copy-status {
             position: fixed;
             bottom: 20px;
@@ -168,11 +160,6 @@
             display: none;
             z-index: 1000;
             font-size: 14px;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
         }
 
         @media (max-width: 600px) {
@@ -189,64 +176,22 @@
 <body>
     <div class="container-fluid">
         <h3 class="text-center text-danger py-2">💕 My Bear 💕</h3>
-        <button class="btn btn-outline-primary btn-sm" id="edit-user-info" style="position: absolute; top: 10px; right: 10px;">Edit Info</button>
         <div id="chat-container">
             <div id="chat-messages"></div>
         </div>
         <div id="send-container">
-            <div id="message-wrapper">
-                <input type="text" id="message-input" placeholder="Type your message...">
-                <button id="send-button">📩</button>
-                <a href="https://khanhduy298.github.io/Heart/">💕</a>
-            </div>
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-button">📩</button>
         </div>
     </div>
 
-    <div id="user-info-form">
-        <h5>Enter Your Info</h5>
-        <div class="mb-3">
-            <label for="user-name" class="form-label">Name</label>
-            <input type="text" id="user-name" class="form-control" />
-        </div>
-        <div class="mb-3">
-            <label for="user-avatar" class="form-label">Avatar URL</label>
-            <input type="text" id="user-avatar" class="form-control" />
-        </div>
-        <button class="btn btn-success" id="save-user-info">Save</button>
-    </div>
-
-    <div id="info-alert">Please enter your name and avatar!</div>
     <div id="copy-status">Tin nhắn đã được copy!</div>
 
     <script>
         const apiURL = "https://65682fed9927836bd9743814.mockapi.io/api/singup/webchat";
 
-        const name = localStorage.getItem('userName');
-        const avatar = localStorage.getItem('userAvatar');
-
-        if (!name || !avatar) {
-            document.getElementById('info-alert').style.display = 'block';
-            setTimeout(() => {
-                document.getElementById('info-alert').style.display = 'none';
-            }, 5000);
-        }
-
-        document.getElementById('edit-user-info').addEventListener('click', () => {
-            document.getElementById('user-info-form').style.display = 'block';
-        });
-
-        document.getElementById('save-user-info').addEventListener('click', () => {
-            const userName = document.getElementById('user-name').value;
-            const userAvatar = document.getElementById('user-avatar').value;
-
-            if (userName && userAvatar) {
-                localStorage.setItem('userName', userName);
-                localStorage.setItem('userAvatar', userAvatar);
-                document.getElementById('user-info-form').style.display = 'none';
-            } else {
-                alert("Both fields are required!");
-            }
-        });
+        const name = localStorage.getItem('userName') || "Anonymous";
+        const avatar = localStorage.getItem('userAvatar') || "https://via.placeholder.com/30";
 
         async function loadMessages() {
             const response = await fetch(apiURL);
@@ -270,10 +215,17 @@
             messageElement.innerHTML = `
                 <img src="${message.avatar}" alt="Avatar">
                 <div class="message-bubble ${isSent ? 'sent' : 'received'}">
-                    <strong>${message.name}:</strong> ${message.tinnhan}
+                    <strong>${message.name}:</strong> <span class="message-text">${message.tinnhan}</span>
                     <div class="message-time">${message.timestamp || ''}</div>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-light copy-button" title="Copy Message">📋</button>
+                        <div class="like-button-container">
+                            <button class="btn btn-sm btn-light like-button" title="Like Message">❤️</button>
+                            <span class="like-count">${message.likes || 0}</span>
+                        </div>
+                        <button class="btn btn-sm btn-light edit-button" title="Edit Message">✏️</button>
+                    </div>
                 </div>
-                <button class="btn btn-sm btn-light copy-button" title="Copy Message">📋</button>
             `;
             chatContainer.appendChild(messageElement);
 
@@ -283,6 +235,26 @@
                 navigator.clipboard.writeText(message.tinnhan).then(() => {
                     showCopyStatus();
                 });
+            });
+
+            // Gắn sự kiện thả tim
+            const likeButton = messageElement.querySelector('.like-button');
+            likeButton.addEventListener('click', async () => {
+                message.likes = (message.likes || 0) + 1;
+                await updateMessage(message);
+                loadMessages();
+            });
+
+            // Gắn sự kiện chỉnh sửa
+            const editButton = messageElement.querySelector('.edit-button');
+            editButton.addEventListener('click', () => {
+                const messageText = messageElement.querySelector('.message-text');
+                const newText = prompt('Edit your message:', message.tinnhan);
+                if (newText && newText !== message.tinnhan) {
+                    message.tinnhan = newText;
+                    updateMessage(message);
+                    loadMessages();
+                }
             });
 
             scrollToBottom();
@@ -296,6 +268,16 @@
             }, 5000);
         }
 
+        async function updateMessage(message) {
+            await fetch(`${apiURL}/${message.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(message)
+            });
+        }
+
         function scrollToBottom() {
             const chatContainer = document.getElementById('chat-messages');
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -304,14 +286,6 @@
         async function sendMessage() {
             const inputElement = document.getElementById('message-input');
             const message = inputElement.value;
-
-            if (!name || !avatar) {
-                document.getElementById('info-alert').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('info-alert').style.display = 'none';
-                }, 5000);
-                return;
-            }
 
             if (!message) {
                 alert('Please enter a message before sending.');
@@ -323,7 +297,8 @@
                 tinnhan: message,
                 name: name,
                 avatar: avatar,
-                timestamp: timestamp
+                timestamp: timestamp,
+                likes: 0
             };
 
             addMessageToUI(newMessage, true);
