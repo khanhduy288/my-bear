@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
     <title>My Bear</title>
 
     <!-- Thêm favicon -->
@@ -16,6 +17,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            zoom: 1; 
         }
 
         #chat-container {
@@ -98,7 +100,7 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            padding: 10px;
+            padding: 5px;
             background-color: #fff;
             display: flex;
             justify-content: center;
@@ -110,8 +112,8 @@
             border: none;
             border-radius: 25px;
             outline: none;
-            font-size: 16px;
-            padding: 10px;
+            font-size: 22px;
+            padding: 5px;
         }
 
         #message-input::placeholder {
@@ -175,6 +177,10 @@
             color: inherit;
         }
 
+        .title1{
+            position: sticky;
+        }
+
         @media (max-width: 600px) {
             #send-button {
                 font-size: 20px;
@@ -188,8 +194,11 @@
 </head>
 <body>
     <div class="container-fluid">
-        <h3 class="text-center text-danger py-2">💕 My Bear 💕</h3>
+        <div class="title1">
+            <h3 class="text-center text-danger py-2">💕 My Bear 💕</h3>
         <button class="btn btn-outline-primary btn-sm" id="edit-user-info" style="position: absolute; top: 10px; right: 10px;">Edit Info</button>
+        </div>
+        
         <div id="chat-container">
             <div id="chat-messages"></div>
         </div>
@@ -348,7 +357,7 @@
 
         loadMessages();
         
-        setInterval(loadMessages, 1000);
+        setInterval(loadMessages, 10000);
     </script>
 </body>
 </html>
